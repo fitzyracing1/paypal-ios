@@ -6,41 +6,40 @@ struct CardPaymentView: View {
     @Environment(CardPaymentViewModel.self)
     var viewModel
     
-    var isOrderCreationLoading: Bool {
-        viewModel.createOrderState.isLoading
+    var createOrderState: AsyncState<Order> {
+        viewModel.createOrderState
     }
     
-    var isApproveOrderLoading: Bool {
-        viewModel.approveOrderState.isLoading
+    var approveOrderState: AsyncState<CardResult> {
+        viewModel.approveOrderState
     }
     
-    var isCompleteOrderLoading: Bool {
-        viewModel.completeOrderState.isLoading
+    var completeOrderState: AsyncState<Order> {
+        viewModel.completeOrderState
     }
     
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 16) {
-                    CreateOrderForm(isLoading: isOrderCreationLoading) { request in
+                    CreateOrderForm(isLoading: createOrderState.isLoading) { request in
                         viewModel.createOrder(using: request)
                     }
-                    if let order = viewModel.createOrderState.value {
+                    UnwrapValueOrError(state: createOrderState) { order in
                         OrderView(order: order)
-                        ApproveOrderWithCardForm(isLoading: isApproveOrderLoading) { request in
+                        ApproveOrderWithCardForm(isLoading: approveOrderState.isLoading) { request in
                             viewModel.approveOrder(using: request)
                         }
                     }
-                    if let cardResult = viewModel.approveOrderState.value {
+                    
+                    UnwrapValueOrError(state: approveOrderState) { cardResult in
                         CardResultView(cardResult: cardResult)
-                        CompleteOrderForm(
-                            intent: viewModel.orderIntent,
-                            isLoading: isCompleteOrderLoading
-                        ) {
+                        let intent = viewModel.orderIntent
+                        CompleteOrderForm(intent: intent, isLoading: completeOrderState.isLoading) {
                             viewModel.completeOrder()
                         }
                     }
-                    if let completeOrderResult = viewModel.completeOrderState.value {
+                    UnwrapValueOrError(state: completeOrderState) { completeOrderResult in
                         OrderView(order: completeOrderResult)
                     }
                     ScrollAnchor(id: "bottomAnchor")
