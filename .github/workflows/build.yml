@@ -29,7 +29,9 @@ jobs:
       - name: Select Xcode Version
         run: sudo xcode-select -switch /Applications/Xcode_26.2.app/Contents/Developer
       - name: Use current branch
-        run: sed -i '' 's/branch = .*/branch = \"'"${GITHUB_HEAD_REF//\//\/}"'\";/' SampleApps/SPMTest/SPMTest.xcodeproj/project.pbxproj
+        run: |
+          HEAD_REF="${GITHUB_HEAD_REF:-main}"
+          sed -i '' 's/branch = .*/branch = \"'"${HEAD_REF//\//\/}"'\";/' SampleApps/SPMTest/SPMTest.xcodeproj/project.pbxproj
       - name: Run swift package resolve
         run: cd SampleApps/SPMTest && swift package resolve
       - name: Build & archive SPMTest
